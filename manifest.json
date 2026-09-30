@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "id": "Adam-loy.spoti",
+  "name": "Spotify_Wheel",
+  "version": "1.0.0",
+  "author": "Adam-loy",
+  "description": "Spotify in the Omarchy bar: always present, with playing off lanch, transport, search, and a panel over the current album cover.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Spotify",
+    "description": "Reat-time playing from Spotify, with search, seek, transport, shuffle, repeat and volume over the current album cover.",
+    "category": "Media",
+    "aliases": [
+      "spotify",
+      "media",
+      "music",
+      "spoty"
+    ],
+    "allowMultiple": false,
+    "defaultSection": "center",
+    "defaults": {
+      "maxLabelWidth": 200,
+      "showArtist": true,
+      "showProgress": true,
+      "hideWhenClosed": false,
+      "scrollAction": "Previous/next track",
+      "accent": "Spotify green",
+      "leftClick": "Open panel",
+      "artBackground": true,
+      "artIntensity": 55,
+      "searchKind": "track",
+      "releaseGenre": "pop",
+      "startOnLogin": false
+    },
+    "schema": [
+      {
+        "key": "maxLabelWidth",
+        "type": "integer",
+        "label": "Maximum label width (px)",
+        "min": 60,
+        "max": 600,
+        "step": 10,
+        "defaultValue": 200,
+        "description": "Track text wider than this scrolls instead of stretching the bar."
+      },
+      {
+        "key": "showArtist",
+        "type": "boolean",
+        "label": "Show artist next to the title",
+        "defaultValue": true
+      },
+      {
+        "key": "showProgress",
+        "type": "boolean",
+        "label": "Show a progress underline in the bar",
+        "defaultValue": true
+      },
+      {
+        "key": "hideWhenClosed",
+        "type": "boolean",
+        "label": "Hide the widget when Spotify is not running",
+        "defaultValue": false,
+        "description": "Off by default, so a dimmed Spotify icon is always in the bar: it searches and it launches the app. Turn this on to hide the slot whenever Spotify is not running."
+      },
+      {
+        "key": "searchKind",
+        "type": "enum",
+        "label": "Search shows",
+        "options": [
+          "track",
+          "album"
+        ],
+        "defaultValue": "track",
+        "description": "Whether the search tab lists songs or albums."
+      },
+      {
+        "key": "releaseGenre",
+        "type": "string",
+        "label": "New releases starts on",
+        "defaultValue": "pop",
+        "description": "Genre or mood the new releases tab asks for when it opens. Apple's search sorts by release date, so a narrow genre is what keeps genuinely new records near the top."
+      },
+      {
+        "key": "leftClick",
+        "type": "enum",
+        "label": "Left click",
+        "options": [
+          "Open panel",
+          "Play/pause"
+        ],
+        "defaultValue": "Open panel",
+        "description": "Which action left click takes. The other of the two lands on right click."
+      },
+      {
+        "key": "scrollAction",
+        "type": "enum",
+        "label": "Mouse wheel over the widget",
+        "options": [
+          "Previous/next track",
+          "Volume",
+          "Nothing"
+        ],
+        "defaultValue": "Previous/next track"
+      },
+      {
+        "key": "accent",
+        "type": "enum",
+        "label": "Accent color",
+        "options": [
+          "Spotify green",
+          "Album art",
+          "Theme accent",
+          "Bar foreground"
+        ],
+        "defaultValue": "Spotify green",
+        "description": "Color of the icon, progress underline, and popup controls. \"Album art\" takes the dominant color of the current cover."
+      },
+      {
+        "key": "artBackground",
+        "type": "boolean",
+        "label": "Album cover behind the panel",
+        "defaultValue": true,
+        "description": "Blurs the current cover into the panel background, tinted and dimmed to whatever keeps the theme's text readable. Needs ImageMagick and curl for the color reading; without them the panel keeps its plain background."
+      },
+      {
+        "key": "artIntensity",
+        "type": "integer",
+        "label": "How much cover shows through (%)",
+        "min": 0,
+        "max": 100,
+        "step": 5,
+        "defaultValue": 55,
+        "description": "A starting point, not a fixed opacity — bright covers are still covered more heavily than dark ones from wherever this is set."
+      },
+      {
+        "key": "startOnLogin",
+        "type": "boolean",
+        "label": "Start Spotify at login, hidden",
+        "defaultValue": false,
+        "description": "Start playing a few seconds after login, with the window sent straight to a hidden workspace. The widget becomes the only interface: you never open the Spotify app. Off by default, because it starts a music player on its own."
+      }
+    ]
+  }
+}
