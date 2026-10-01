@@ -512,89 +512,6 @@ function spotifyShowScript() {
   ].join('\n')
 }
 
-// Clearing Spotify's own caches makes the next start quicker: the Chromium
-// profile underneath it re-reads a large local store on every launch, and that
-// is most of the wait.
-//
-// Only directories named here are removed, and they are named by their full
-// path inside the profile. That precision is the whole point. `Browser/` and
-// `Default/` hold Cookies, Login Data and Local Storage, so removing a profile
-// directory would sign the user out rather than speed anything up; the
-// regenerable caches are the `Cache`, `Code Cache` and `GPUCache` directories
-// *inside* them, and on a real install those are the overwhelming majority of
-// the space. Anything not named is not touched.
-function clearCacheScript() {
-  return [
-    'set -u',
-    '',
-    'freed=0',
-    'dirs=0',
-    '',
-    'du_bytes() {',
-    '  [ -e "$1" ] || { echo 0; return; }',
-    '  du -sb "$1" 2>/dev/null | cut -f1 || echo 0',
-    '}',
-    '',
-    'clear_dir() {',
-    '  [ -d "$1" ] || return 0',
-    '  freed=$((freed + $(du_bytes "$1")))',
-    '  rm -rf -- "$1" || return 0',
-    '  dirs=$((dirs + 1))',
-    '}',
-    '',
-    'cache="${XDG_CACHE_HOME:-$HOME/.cache}/spotify"',
-    '',
-    '# The Chromium caches inside each profile, and the profile-agnostic ones.',
-    '# `Cache` is where the bulk of the space is; the rest are small and cheap',
-    '# to rebuild, so they go with it.',
-    'for name in Cache Code\\ Cache GPUCache DawnCache DawnWebGPUCache \\',
-    '            DawnGraphiteCache GrShaderCache GraphiteDawnCache ShaderCache \\',
-    '            component_crx_cache Crashpad Service\\ Worker; do',
-    '  clear_dir "$cache/Browser/$name"',
-    '  clear_dir "$cache/Default/$name"',
-    '  clear_dir "$cache/$name"',
-    'done',
-    '',
-    '# Spotify\'s own local store: metadata and media the client re-fetches.',
-    'clear_dir "$cache/Storage"',
-    '',
-    '# This widget\'s own probe caches, so a clear really is a cold start.',
-    'clear_dir "${XDG_CACHE_HOME:-$HOME/.cache}/Spotify_Wheel"',
-    '',
-    'printf "FREED %s\\n" "$freed"',
-    'printf "DIRS %s\\n" "$dirs"',
-    'exit 0'
-  ].join('\n')
-}
-
-// Turns the cache script\'s stdout into a byte count, or null if it did not
-// report one.
-function parseCacheClear(text) {
-  var match = /^FREED\s+(\d+)$/m.exec(String(text || ""))
-  if (!match) return null
-
-  var countMatch = /^DIRS\s+(\d+)$/m.exec(String(text || ""))
-  return {
-    freed: Number(match[1]) || 0,
-    dirs: countMatch ? Number(countMatch[1]) || 0 : 0
-  }
-}
-
-// A byte count as something worth putting in front of someone.
-function humanBytes(bytes) {
-  var value = Math.max(0, Number(bytes) || 0)
-  if (value < 1024) return value + " B"
-
-  var units = ["KB", "MB", "GB"]
-  var index = -1
-  do {
-    value = value / 1024
-    index++
-  } while (value >= 1024 && index < units.length - 1)
-
-  return (value >= 10 ? value.toFixed(0) : value.toFixed(1)) + " " + units[index]
-}
-
 // Turns the probe's stdout into { mean, dominant, luma } or null.
 function parseArtProbe(text) {
   var lines = String(text || "").split("\n")
@@ -806,9 +723,6 @@ if (typeof module !== "undefined") {
     spotifyBackgroundScript: spotifyBackgroundScript,
     spotifyShowScript: spotifyShowScript,
     hiddenWorkspace: HIDDEN_WORKSPACE,
-    clearCacheScript: clearCacheScript,
-    parseCacheClear: parseCacheClear,
-    humanBytes: humanBytes,
     parseArtProbe: parseArtProbe,
     fileUrl: fileUrl,
     pickDominant: pickDominant,
