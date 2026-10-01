@@ -280,38 +280,10 @@ Panel {
     }
   }
 
-  // Minimising and clearing the cache share a process, since neither can be
-  // running at once and neither needs a result the other would confuse.
+  // Shared by the background-playback scripts, which cannot overlap.
   Process {
     id: opsProc
-    property bool cacheRun: false
-
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: {
-        if (!opsProc.cacheRun) return
-        var report = Model.parseCacheClear(text)
-        root.cacheNote = report && report.freed
-          ? "Freed " + Model.humanBytes(report.freed)
-          : "Cache already clear"
-      }
-    }
-
-    onExited: function(exitCode) {
-      if (exitCode !== 0) root.cacheNote = "Could not clear the cache"
-      opsProc.cacheRun = false
-    }
   }
-
-  // Reported after a clear, then faded so it does not become furniture.
-  property string cacheNote: ""
-  Timer {
-    id: cacheNoteClear
-    interval: 4000
-    onTriggered: root.cacheNote = ""
-  }
-
-  onCacheNoteChanged: if (cacheNote !== "") cacheNoteClear.restart()
 
 
   // ---------------------------------------------------------------- discovery
@@ -526,11 +498,18 @@ Panel {
     opsProc.running = true
   }
 
-  function clearCache() {
-    if (opsProc.running) opsProc.running = false
-    opsProc.cacheRun = true
-    opsProc.command = ["/bin/sh", "-c", Model.clearCacheScript()]
-    opsProc.running = true
+  // Actually close Spotify. This is the one button that stops the music, so it
+  // asks MPRIS rather than killing a process: a kill would take the client down
+  // mid-write and leave the next start slower, and only the player knows
+  // whether it is willing to quit.
+  //
+  // Quitting is not the same as minimising. Minimising moves the window to
+  // special:spotify and keeps playing, which is the default way to get it out
+  // of the way; this ends it.
+  function quitApp() {
+    if (!live || !player.canQuit) return false
+    player.quit()
+    return true
   }
 
   function playPause() {
@@ -1531,26 +1510,27 @@ Panel {
           }
         }
 
+        // Stops playback, and closes Spotify with it. Deliberately unlike "Start":
+        // that one keeps playing with the window out of sight, and this is the
+        // way to actually be finished.
         Button {
           width: (parent.width - Style.space(4)) / 2
-          text: "Clear cache"
-          iconText: "󰩹"
+          text: "Close app"
+          iconText: "󰅖"
           foreground: root.foreground
           accent: root.accentColor
           bordered: true
-          tooltipText: "Empty Spotify's caches so the next start is quicker"
-          onClicked: root.clearCache()
+          enabled: root.live && root.player.canQuit
+          tooltipText: !root.live
+            ? "Spotify is not running"
+            : !root.player.canQuit
+              ? "Spotify will not accept a quit request"
+              : "Quit Spotify and stop playing"
+          onClicked: {
+            root.quitApp()
+            root.close()
+          }
         }
-      }
-
-      Text {
-        width: parent.width
-        text: root.cacheNote
-        color: root.accentColor
-        font.family: root.fontFamily
-        font.pixelSize: Style.font.caption
-        horizontalAlignment: Text.AlignHCenter
-        visible: root.cacheNote !== ""
       }
     }
   }
@@ -1569,7 +1549,7 @@ Panel {
     function launch(): void { root.launch() }
     function minimize(): void { root.minimizeToBackground() }
     function show(): void { root.raise() }
-    function clearCache(): void { root.clearCache() }
+    function quit(): string { return root.quitApp() ? "ok" : "unhandled" }
     function status(): string { return root.statusJson() }
 
     // The new views, so the same thing is reachable from a binding.
