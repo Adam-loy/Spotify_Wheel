@@ -1,10 +1,11 @@
 {
   "schemaVersion": 1,
-  "id": "Adam-loy.spoti",
+  "id": "io.github.adam-loy.spotify-wheel",
   "name": "Spotify_Wheel",
   "version": "1.0.0",
   "author": "Adam-loy",
-  "description": "Spotify in the Omarchy bar: always present, with playing off lanch, transport, search, and a panel over the current album cover.",
+  "license": "CC0-1.0",
+  "description": "Spotify in the Omarchy bar: always present, with background playback, transport, search, and a panel over the current album cover.",
   "kinds": [
     "bar-widget"
   ],
@@ -13,7 +14,7 @@
   },
   "barWidget": {
     "displayName": "Spotify",
-    "description": "Reat-time playing from Spotify, with search, seek, transport, shuffle, repeat and volume over the current album cover.",
+    "description": "Real-time playing from Spotify, with search, seek, transport, shuffle, repeat and volume over the current album cover.",
     "category": "Media",
     "aliases": [
       "spotify",
