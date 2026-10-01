@@ -4,6 +4,69 @@ A Spotify widget for the [Omarchy](https://omarchy.dev) bar. It stays in the bar
 whether or not Spotify is running, adds search and a new releases tab, and has a
 button for keeping the music playing with no window in the way.
 
+![The widget in the bar, and its panel open over the current album cover](preview.jpg)
+
+## Install
+
+```sh
+omarchy plugin add https://github.com/Adam-loy/Spotify_Wheel.git --enable
+```
+
+That clones the repository into `~/.config/omarchy/plugins/`, puts the widget in
+the bar, and asks which section to use. To do it without the questions:
+
+```sh
+omarchy plugin add https://github.com/Adam-loy/Spotify_Wheel.git --enable --yes
+```
+
+Or clone it yourself, if you would rather read the code first:
+
+```sh
+git clone https://github.com/Adam-loy/Spotify_Wheel.git \
+  ~/.config/omarchy/plugins/io.github.adam-loy.spotify-wheel
+omarchy restart shell
+omarchy plugin enable io.github.adam-loy.spotify-wheel --section center
+```
+
+The directory name does not matter to the shell, but the **plugin id does**: it
+comes from `"id"` in `manifest.json` and is
+`io.github.adam-loy.spotify-wheel`. Every command below takes that id, not the
+repository name. `omarchy plugin list` shows the id the shell actually found, and
+`omarchy-shell shell rescanPlugins` makes it look again after a fresh clone.
+
+To put it somewhere else on the bar later:
+
+```sh
+omarchy plugin move io.github.adam-loy.spotify-wheel --section right
+```
+
+## Removal
+
+```sh
+omarchy plugin remove io.github.adam-loy.spotify-wheel
+```
+
+That takes it off the bar, unloads it from the running shell, and deletes the
+folder. Confirm the prompt, or pass `--yes` for a script. If you cloned it
+yourself into a directory named something other than the id, remove that
+directory yourself.
+
+To keep the files and only take the widget off the bar, use `disable` instead:
+
+```sh
+omarchy plugin disable io.github.adam-loy.spotify-wheel
+```
+
+To update an existing install to the latest commit:
+
+```sh
+omarchy plugin update io.github.adam-loy.spotify-wheel
+```
+
+Nothing is written outside `~/.config/omarchy/plugins/`, apart from artwork the
+widget caches under `~/.cache/Spotify_Wheel/`. Uninstalling removes the plugin
+folder; the artwork cache is left alone and is safe to delete.
+
 
 ## What is different from upstream
 
@@ -15,7 +78,7 @@ button for keeping the music playing with no window in the way.
   used at all — see [Where the data comes from](#where-the-data-comes-from).
 - **Start / Show app**, which runs Spotify with no window at all. See
   [Background playback](#background-playback).
-- **Clear cache**, which empties Spotify's caches so the next start is quicker.
+- **Close app**, which quits Spotify and stops the music.
 
 ## No Premium, and no Spotify API
 
@@ -99,19 +162,18 @@ Two details are worth knowing if you read `Model.js`:
 default, because starting a music player unprompted is not a default anyone
 would want.
 
-## Clearing the cache
+## Closing the app
 
-**Clear cache** empties the cache directories under `~/.cache/spotify` and
-reports how much it freed.
+**Close app** is the one control that stops the music. It asks MPRIS to quit,
+rather than killing the process: only the player knows whether it is willing to
+quit, and a kill mid-write would leave the next start slower.
 
-It is deliberately narrow. `~/.cache/spotify/Browser` also holds the session,
-so deleting the whole tree would sign you out; the script only removes named
-cache subdirectories, and always leaves `Cookies`, `Login Data`, `Local Storage`,
-`Preferences`, `Data`, and `Users` alone. `test/ops-test.js` builds a fake
-profile and asserts the session files are still there afterwards.
+That makes it deliberately unlike **Start**. Minimising — moving the window to
+`special:spotify` — is the everyday way to get Spotify out of the way while it
+keeps playing. This ends it.
 
-Note that a cleared cache is a slower *next* start, not a faster current one —
-the point is getting a clean, quick start after Spotify has had a long life.
+The button is disabled when Spotify is not running, and when the player reports
+`canQuit` as false, so it never looks like it worked when it did not.
 
 ## Artwork
 
@@ -153,7 +215,7 @@ omarchy-shell Spotify_Wheel previous
 omarchy-shell Spotify_Wheel launch     # start, and hide the window
 omarchy-shell Spotify_Wheel show       # bring the window back
 omarchy-shell Spotify_Wheel minimize   # hide an already-open window
-omarchy-shell Spotify_Wheel clearCache
+omarchy-shell Spotify_Wheel quit       # quit Spotify, stopping playback
 omarchy-shell Spotify_Wheel search 'daft punk'
 omarchy-shell Spotify_Wheel releases 'hip hop'
 omarchy-shell Spotify_Wheel status
@@ -199,21 +261,12 @@ QML_IMPORT_PATH=/usr/share/omarchy/shell:/usr/lib/qt6/qml qs -p harness.qml
 
 That harness has already earned its place: it is what caught `StdioCollector`
 handlers that read a `text` argument the signal does not pass, which Node never
-noticed and which would have left search, thumbnails, and cache clearing all
-silently broken in the bar.
-
-## Install
-
-```sh
-ln -s "$PWD" ~/.config/omarchy/plugins/
-omarchy restart shell
-```
-
-Then enable it: `omarchy plugin enable Spotify_Wheel`, or add
-`{"id": "Spotify_Wheel"}` to `bar.layout.center` in `~/.config/omarchy/shell.json`.
-
-The plugin is a symlink so that editing it in place reloads the widget without
-reinstalling.
+noticed and which would have left search and thumbnails silently broken in the
+bar.
 
 ## Licence
 
+CC0 1.0 Universal — see [`LICENSE`](LICENSE). Do what you want with it.
+
+External dependencies are listed under [Requirements](#requirements); none of them
+are bundled, and all are packaged for Arch and Omarchy.
